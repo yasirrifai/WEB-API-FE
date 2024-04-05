@@ -16,6 +16,7 @@ function Login() {
       localStorage.setItem('authToken', token);
 
       setIsLoggedIn(true);
+      navigate('/weather-map')
       console.log('Login successful, token stored in localStorage');
       console.log('isLoggedIn state:', isLoggedIn);
     } catch (error) {

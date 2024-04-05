@@ -5,6 +5,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import L from 'leaflet';
 import { WiDaySunny, WiCloud, WiSnow, WiDayCloudy, WiRain, WiNa, WiWindBeaufort0, WiThermometer, WiHumidity, WiRainWind } from 'react-icons/wi';
+import { RingLoader } from 'react-spinners'; 
 
 const defaultIcon = L.icon({
   iconUrl: markerIcon,
@@ -24,26 +25,30 @@ const WeatherMap = () => {
       fetchData(); // Fetch data every 1 minute
     }, 60000); // 60000 milliseconds = 1 minute
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    setTimeout(() => {
+      setLoading(false); 
+    }, 5000); 
+
+    return () => clearInterval(interval); 
   }, []);
 
   const fetchData = () => {
-    setLoading(true); // Set loading to true before fetching data
+    setLoading(true); 
     const token = localStorage.getItem('authToken');
     axios.get('http://localhost:3000/api/weatherData/current', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     })
-    .then(response => {
-      setWeatherData(response.data);
-      console.log(response.data);
-      setLoading(false); // Set loading to false after fetching data
-    })
-    .catch(error => {
-      console.error('Failed to fetch weather data:', error);
-      setLoading(false); // Set loading to false on error as well
-    });
+      .then(response => {
+        setWeatherData(response.data);
+        console.log(response.data);
+        setLoading(false); // Set loading to false after fetching data
+      })
+      .catch(error => {
+        console.error('Failed to fetch weather data:', error);
+        setLoading(false); // Set loading to false on error as well
+      });
   };
 
   const getWeatherIcon = (temperature) => {
@@ -67,7 +72,7 @@ const WeatherMap = () => {
       <div className="w-full h-screen">
         {loading ? (
           <div className="flex justify-center items-center h-full">
-            <p>Loading...</p>
+            <RingLoader color="#4A90E2" loading={loading} size={80} /> {/* Use RingLoader component for spinner */}
           </div>
         ) : (
           <MapContainer center={[6.9271, 79.8612]} zoom={7} className="w-full h-full">
@@ -75,44 +80,44 @@ const WeatherMap = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
-           {weatherData.map((station, index) => {
-  if (station._id && station._id.coordinates) {
-    // Determine weather condition based on temperature
-    let weatherCondition;
-    if (station.avgTemperature >= 30) {
-      weatherCondition = 'Sunny';
-    } else if (station.avgTemperature >= 20 && station.avgTemperature < 30) {
-      weatherCondition = 'Mostly Sunny';
-    } else if (station.avgTemperature >= 10 && station.avgTemperature < 20) {
-      weatherCondition = 'Cloudy';
-    } else {
-      weatherCondition = 'Snowy';
-    }
+            {weatherData.map((station, index) => {
+              if (station._id && station._id.coordinates) {
+                // Determine weather condition based on temperature
+                let weatherCondition;
+                if (station.avgTemperature >= 30) {
+                  weatherCondition = 'Sunny';
+                } else if (station.avgTemperature >= 20 && station.avgTemperature < 30) {
+                  weatherCondition = 'Mostly Sunny';
+                } else if (station.avgTemperature >= 10 && station.avgTemperature < 20) {
+                  weatherCondition = 'Cloudy';
+                } else {
+                  weatherCondition = 'Snowy';
+                }
 
-    return (
-      <Marker key={index} position={[station._id.coordinates[1], station._id.coordinates[0]]} icon={defaultIcon}>
-        <Popup>
-          <div>
-            <div className="mb-2 flex items-center justify-center">
-              <strong className="mr-2"> Weather Condition: {weatherCondition} </strong>
-              {getWeatherIcon(station.avgTemperature)}
-            </div>
-            <div className="mb-2">
-              <strong><WiThermometer size={20} color="orange" /> Temperature:</strong> {station.avgTemperature}°C
-            </div>
-            <div className="mb-2">
-              <strong><WiHumidity size={20} color="blue" /> Humidity:</strong> {station.avgHumidity}%
-            </div>
-            <div>
-              <strong><WiWindBeaufort0 size={20} color="gray" /> Air Pressure:</strong> {station.avgAirPressure} hPa
-            </div>
-          </div>
-        </Popup>
-      </Marker>
-    );
-  }
-  return null;
-})}
+                return (
+                  <Marker key={index} position={[station._id.coordinates[1], station._id.coordinates[0]]} icon={defaultIcon}>
+                    <Popup>
+                      <div>
+                        <div className="mb-2 flex items-center justify-center">
+                          <strong className="mr-2"> Weather Condition: {weatherCondition} </strong>
+                          {getWeatherIcon(station.avgTemperature)}
+                        </div>
+                        <div className="mb-2">
+                          <strong><WiThermometer size={20} color="orange" /> Temperature:</strong> {station.avgTemperature}°C
+                        </div>
+                        <div className="mb-2">
+                          <strong><WiHumidity size={20} color="blue" /> Humidity:</strong> {station.avgHumidity}%
+                        </div>
+                        <div>
+                          <strong><WiWindBeaufort0 size={20} color="gray" /> Air Pressure:</strong> {station.avgAirPressure} hPa
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              }
+              return null;
+            })}
 
           </MapContainer>
         )}
